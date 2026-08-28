@@ -1,5 +1,5 @@
 from core.stor import Stor
-from core.retrieval_tools import Ollama, OllamaRAGModels, format_context
+from core.llm import Ollama, OllamaRAGModels, format_context
 s = Stor(offline=True)
 #s.append('test', 'testfile.txt')
 result = s.text_query('test','сколько живет человек в городе')
