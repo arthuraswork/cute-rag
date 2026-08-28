@@ -1,12 +1,12 @@
 import chromadb
 import os
+from chromadb.api.types import QueryResult
 from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from datetime import datetime
 from uuid import uuid4
 from langchain_core.documents import Document
-
 
 class Stor:
     def __init__(
@@ -60,7 +60,7 @@ class Stor:
             self.collections[collection.name] = collection
         return [collection.name for collection in collections]
 
-    def text_query(self, collection_name: str, text: str, k: int = 3, returning_embeds=False):
+    def text_query(self, collection_name: str, text: str, k: int = 3, returning_embeds=False) -> QueryResult:
         query = self.vectorise(text)
         collection = self.get_collection(collection_name=collection_name)
         resulting = collection.query(
