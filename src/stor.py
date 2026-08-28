@@ -1,5 +1,3 @@
-import chromadb
-import os
 from chromadb.api.types import QueryResult
 from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -7,6 +5,9 @@ from langchain_community.document_loaders import TextLoader
 from datetime import datetime
 from uuid import uuid4
 from langchain_core.documents import Document
+
+import chromadb
+import os
 
 class Stor:
     def __init__(

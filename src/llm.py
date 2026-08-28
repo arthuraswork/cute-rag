@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import ollama
-from core.ollamas import OllamaRAGModels
+from src.ollamas import OllamaRAGModels
 from chromadb.api.types import QueryResult
 def format_prompt(template: str, content: list[str], user_prompt: str):
     return template.replace('{content}','\n\n\n'.join(content)).replace('{prompt}', user_prompt)
