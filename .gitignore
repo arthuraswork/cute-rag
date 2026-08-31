@@ -11,3 +11,5 @@ wheels/
 
 chroma_data/
 testfile.txt
+
+main.py

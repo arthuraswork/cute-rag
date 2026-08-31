@@ -3,6 +3,7 @@ from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from datetime import datetime
+from hashlib import blake2s
 from uuid import uuid4
 from langchain_core.documents import Document
 
@@ -15,11 +16,9 @@ class Stor:
         db_path: str = './chroma_data',
         model_name='all-MiniLM-L6-v2',
         chunk_size: int = 512,
-        chunk_overlap: int = 128,
-        offline=False
+        chunk_overlap: int = 64,
+        batch_size: int  = 256
     ):
-        if offline:
-            os.environ['HF_HUB_OFFLINE'] = "1"
 
         self.stor = chromadb.PersistentClient(path=db_path)
         self.splitter = RecursiveCharacterTextSplitter(
@@ -28,10 +27,9 @@ class Stor:
         )
         self.collections = dict()
         self.model = SentenceTransformer(model_name, device='cpu')
+        self.batch_size = batch_size
 
-    def append(self, collection_name: str, path_to_file: str):
-        text = self.load_file(path_to_file)
-        chunks = self.create_chunks(text)
+    def add(self, collection_name, path_to_file, chunks: list[str]):
         vec_chunks = self.vectorise_chunks(chunks)
         collection = self.get_collection(collection_name)
         date = datetime.now().date().isoformat()
@@ -47,9 +45,20 @@ class Stor:
                     "chunk_count": chunk_len
                 } for i in range(chunk_len)
             ],
-            ids=[str(uuid4()) for _ in range(chunk_len)]
+            ids=[blake2s(chunk.encode()).hexdigest() for chunk in chunks]
         )
 
+    def append(self, collection_name: str, path_to_file: str):
+        text = self.load_file(path_to_file)
+        chunks = self.create_chunks(text)
+        n_chunks = len(chunks)
+        if n_chunks > self.batch_size:
+            n_batches = n_chunks // self.batch_size + 1
+            for i_batch in range(n_batches):
+                self.add(collection_name, path_to_file, chunks[i_batch * self.batch_size: (i_batch + 1) * self.batch_size])
+        else:
+            self.add(collection_name, path_to_file, chunks)
+            
     def get_collection(self, collection_name: str) -> chromadb.Collection:
         if collection_name not in self.collections:
             self.collections[collection_name] = self.stor.get_or_create_collection(collection_name)
@@ -91,7 +100,7 @@ class Stor:
         vectors = self.model.encode(chunks)
         return vectors
 
-    def load_file(self, path_to_file) -> list[Document]:
+    def load_file(self, path_to_file) -> Document:
         loader = TextLoader(path_to_file)
         docs = loader.load()
         return docs
@@ -99,3 +108,5 @@ class Stor:
     def create_chunks(self, text) -> list[Document]:
         docs = self.splitter.split_documents(text)
         return self.doc2text(docs)
+
+    
