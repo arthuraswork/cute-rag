@@ -10,6 +10,6 @@ wheels/
 .venv
 
 chroma_data/
-testfile.txt
+testdocs/
 
 main.py
