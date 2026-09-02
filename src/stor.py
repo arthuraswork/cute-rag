@@ -7,6 +7,8 @@ from hashlib import blake2s
 from uuid import uuid4
 from langchain_core.documents import Document
 
+
+
 import chromadb
 import os
 
@@ -109,4 +111,7 @@ class Stor:
         docs = self.splitter.split_documents(text)
         return self.doc2text(docs)
 
-    
+    def get_by_source(self, collection: str, source: str):
+        collection = self.stor.get_collection(collection)
+        if not collection:
+            raise 
